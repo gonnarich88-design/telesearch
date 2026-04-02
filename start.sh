@@ -1,14 +1,19 @@
 #!/bin/sh
 set -e
 
-prisma db push --accept-data-loss
+SEED_VERSION="v3"
+SEED_MARKER="./prisma/.seed_version"
 
-# First deploy: import seed data if DB is empty
-COUNT=$(sqlite3 ./prisma/dev.db "SELECT count(*) FROM Entity;" 2>/dev/null || echo "0")
-if [ "$COUNT" = "0" ]; then
-  echo "Empty database — importing seed data..."
+# Force reimport if seed version doesn't match
+if [ ! -f "$SEED_MARKER" ] || [ "$(cat $SEED_MARKER)" != "$SEED_VERSION" ]; then
+  echo "Seed version mismatch — reimporting data..."
+  rm -f ./prisma/dev.db
+  prisma db push --accept-data-loss
   sqlite3 ./prisma/dev.db < ./seed.sql
-  echo "Seed imported: $(sqlite3 ./prisma/dev.db 'SELECT count(*) FROM Entity;') entities"
+  echo "$SEED_VERSION" > "$SEED_MARKER"
+  echo "Seed done: $(sqlite3 ./prisma/dev.db 'SELECT count(*) FROM Entity;') entities"
+else
+  prisma db push --accept-data-loss
 fi
 
 exec node server.js
