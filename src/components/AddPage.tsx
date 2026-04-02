@@ -128,7 +128,7 @@ export function AddPage() {
             username: String(x?.username || ""),
             sourceKind: String(x?.sourceKind || "unknown"),
             isNew: newSet.has(String(x?.username || "")),
-          })).filter((x) => x.username)
+          })).filter((x: { username: string; sourceKind: string; isNew: boolean }) => x.username)
         : [];
 
       setNicegramPreview({
