@@ -21,6 +21,7 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/prisma ./prisma
+COPY prisma/dev.db ./prisma-seed/dev.db
 COPY --from=builder /app/start.sh ./start.sh
 
 RUN chmod +x start.sh
