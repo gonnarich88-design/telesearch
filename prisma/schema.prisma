@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Category {
+  id    String   @id @default(cuid())
+  name  String
+  slug  String   @unique
+  entities EntityCategory[]
+}
+
+model Entity {
+  id              String   @id @default(cuid())
+  kind            String   // "channel" | "group" | "bot"
+  name            String
+  username        String?  // for bots and public channels/groups
+  link            String?  // t.me/xxx or invite link
+  description     String?  // mainly for bots
+  memberCount     Int      @default(0)
+  lastUpdatedAt   DateTime  @default(now())
+  lastPostAt      DateTime? // วันที่โพสต์ล่าสุดในช่อง/กลุ่ม (ดึงจาก t.me/s/username — เฉพาะ channel สาธารณะ)
+  isPublic        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  activityStatus  String?  // "active" = ยังอัพเดตอยู่, "inactive" = ไม่อัพเดตแล้ว, null = ไม่ระบุ
+  categories      EntityCategory[]
+}
+
+model EntityCategory {
+  entityId   String
+  categoryId String
+  entity     Entity   @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  @@id([entityId, categoryId])
+}
