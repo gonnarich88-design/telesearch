@@ -141,8 +141,11 @@ export type TelegramChat = {
   id: number;
   type: TelegramChatType;
   title?: string;
+  first_name?: string;
+  last_name?: string;
   username?: string;
   description?: string;
+  bio?: string;
   invite_link?: string;
 };
 
@@ -267,13 +270,18 @@ export async function fetchFromTelegram(
     }
 
     const chat = chatRes.result;
-    const title = chat.title || chat.username || username;
     const kind: "channel" | "group" | "bot" =
       chat.type === "channel" ? "channel"
       : chat.type === "supergroup" || chat.type === "group" ? "group"
       : "bot";
+    // บอทใช้ first_name, ช่อง/กลุ่มใช้ title
+    const nameParts = kind === "bot"
+      ? [chat.first_name, chat.last_name].filter(Boolean).join(" ") || chat.username || username
+      : chat.title || chat.username || username;
     const link = chat.username ? `https://t.me/${chat.username}` : null;
     const usernameVal = chat.username || null;
+    // บอทใช้ bio เป็น about text, ช่อง/กลุ่มใช้ description
+    const description = chat.description || chat.bio || null;
 
     let memberCount = 0;
     if (chat.type === "channel" || chat.type === "supergroup" || chat.type === "group") {
@@ -284,10 +292,10 @@ export async function fetchFromTelegram(
     return {
       ok: true,
       kind,
-      name: title,
+      name: nameParts,
       username: usernameVal,
       link,
-      description: chat.description || null,
+      description,
       memberCount,
     };
   } catch (e) {
