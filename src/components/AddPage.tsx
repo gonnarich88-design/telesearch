@@ -26,6 +26,7 @@ export function AddPage() {
   const [categoryId, setCategoryId] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [fetching, setFetching] = useState(false);
+  const [importProgress, setImportProgress] = useState<{ current: number; total: number } | null>(null);
   const [result, setResult] = useState<{ ok: number; fail: number; messages: string[] } | null>(null);
   const [nicegramUrl, setNicegramUrl] = useState("https://nicegram.app/hub/category/gambling-betting?lang=th");
   const [nicegramMaxPages, setNicegramMaxPages] = useState(20);
@@ -53,6 +54,7 @@ export function AddPage() {
       return;
     }
     setFetching(true);
+    setImportProgress({ current: 0, total: urls.length });
     setResult(null);
     const categoryIds = categoryId ? [categoryId] : [];
     let ok = 0;
@@ -62,6 +64,7 @@ export function AddPage() {
 
     for (let i = 0; i < urls.length; i++) {
       const link = urls[i];
+      setImportProgress({ current: i + 1, total: urls.length });
       try {
         const res = await fetch("/api/telegram/fetch", {
           method: "POST",
@@ -88,6 +91,7 @@ export function AddPage() {
     setResult({ ok, fail, messages });
     setUrlInput("");
     setFetching(false);
+    setImportProgress(null);
   };
 
   const handleFetchFromTelegram = async () => {
@@ -252,7 +256,11 @@ export function AddPage() {
                     className="rounded-input px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
                     style={{ backgroundColor: "var(--success)" }}
                   >
-                    {fetching ? "กำลังนำเข้า..." : `นำเข้า ${nicegramPreview.newUsernames.length} รายการใหม่`}
+                    {fetching && importProgress
+                      ? `กำลังนำเข้า ${importProgress.current}/${importProgress.total}...`
+                      : fetching
+                        ? "กำลังนำเข้า..."
+                        : `นำเข้า ${nicegramPreview.newUsernames.length} รายการใหม่`}
                   </button>
                   <button
                     type="button"
@@ -314,7 +322,11 @@ export function AddPage() {
               className="rounded-input px-6 py-2.5 font-medium text-white shrink-0 disabled:opacity-50"
               style={{ backgroundColor: "var(--success)" }}
             >
-              {fetching ? "กำลังดึง..." : "ดึงข้อมูล"}
+              {fetching && importProgress
+                ? `กำลังดึง ${importProgress.current}/${importProgress.total}...`
+                : fetching
+                  ? "กำลังดึง..."
+                  : "ดึงข้อมูล"}
             </button>
             {urlInput.trim() && (
               <span className="text-[var(--text-dim)] text-sm">
