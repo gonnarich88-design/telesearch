@@ -65,6 +65,7 @@ export function SearchPage() {
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [patchingEntityId, setPatchingEntityId] = useState<string | null>(null);
   const [categoryDropdownEntityId, setCategoryDropdownEntityId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   type SortKey = "memberCount_desc" | "memberCount_asc" | "lastUpdatedAt_desc" | "lastUpdatedAt_asc" | "activityStatus_asc" | "activityStatus_desc" | "category_asc" | "category_desc";
   const [sortKey, setSortKey] = useState<SortKey>("memberCount_desc");
@@ -374,6 +375,15 @@ export function SearchPage() {
     },
     []
   );
+
+  const copyUrl = (e: Entity) => {
+    const url = e.link || (e.username ? `https://t.me/${e.username}` : null);
+    if (!url) return;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedId(e.id);
+      setTimeout(() => setCopiedId((prev) => (prev === e.id ? null : prev)), 1500);
+    });
+  };
 
   return (
     <div className="min-h-screen bg-mesh grain relative overflow-x-hidden">
@@ -724,9 +734,23 @@ export function SearchPage() {
                       <div className="flex flex-wrap items-center gap-2 text-xs">
                         <Link href={`/entity/${e.id}`} className="text-[var(--accent)] hover:underline">ดูรายละเอียด</Link>
                         {e.link && (
-                          <a href={e.link} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline truncate max-w-[140px]">
+                          <a href={e.link} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline truncate max-w-[100px]">
                             {e.link.replace("https://t.me/", "@")}
                           </a>
+                        )}
+                        {(e.link || e.username) && (
+                          <button
+                            type="button"
+                            onClick={() => copyUrl(e)}
+                            className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 transition-all ${
+                              copiedId === e.id
+                                ? "text-emerald-400"
+                                : "text-[var(--text-dim)] hover:text-[var(--accent)]"
+                            }`}
+                            title="คัดลอก URL"
+                          >
+                            {copiedId === e.id ? "✓ คัดลอกแล้ว" : "📋 copy"}
+                          </button>
                         )}
                         <button
                           type="button"
@@ -811,9 +835,19 @@ export function SearchPage() {
                         </td>
                         <td className="px-1 py-1.5 align-top min-w-0 overflow-hidden">
                           {e.link ? (
-                            <a href={e.link} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline line-clamp-1 block truncate" title={e.link}>
-                              {e.link}
-                            </a>
+                            <div className="flex items-center gap-0.5 min-w-0">
+                              <a href={e.link} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline truncate flex-1 min-w-0" title={e.link}>
+                                {e.link}
+                              </a>
+                              <button
+                                type="button"
+                                onClick={() => copyUrl(e)}
+                                className={`shrink-0 rounded px-1 py-0.5 text-[10px] transition-all ${copiedId === e.id ? "text-emerald-400" : "text-[var(--text-dim)] hover:text-[var(--accent)]"}`}
+                                title="คัดลอก URL"
+                              >
+                                {copiedId === e.id ? "✓" : "📋"}
+                              </button>
+                            </div>
                           ) : (
                             <span className="text-[var(--text-dim)]">—</span>
                           )}

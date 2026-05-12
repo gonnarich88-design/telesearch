@@ -34,6 +34,7 @@ export default function EntityDetailPage() {
   const [entity, setEntity] = useState<Entity | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [savingTag, setSavingTag] = useState(false);
   const [savingFetchedAt, setSavingFetchedAt] = useState(false);
   const [savingCategories, setSavingCategories] = useState(false);
@@ -356,6 +357,26 @@ export default function EntityDetailPage() {
               >
                 เปิดใน Telegram →
               </a>
+            )}
+            {(entity.link || entity.username) && (
+              <button
+                type="button"
+                onClick={() => {
+                  const url = entity.link || (entity.username ? `https://t.me/${entity.username}` : "");
+                  if (!url) return;
+                  navigator.clipboard.writeText(url).then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1500);
+                  });
+                }}
+                className={`rounded-lg border px-4 py-2.5 text-sm font-medium transition-all inline-flex items-center gap-2 ${
+                  copied
+                    ? "border-emerald-500 bg-emerald-500/15 text-emerald-400"
+                    : "border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--accent)] hover:border-[var(--border-focus)]"
+                }`}
+              >
+                {copied ? "✓ คัดลอกแล้ว" : "📋 คัดลอก URL"}
+              </button>
             )}
             <button
               type="button"
